@@ -1,0 +1,7 @@
+package ru.magenta.lorempicsumtestapp.data
+
+import ru.magenta.lorempicsumtestapp.core.Abstract
+
+class PictureDataMapper : Abstract.Mapper {
+    fun map(id: Int, download: String) = PictureData(id, download)
+}
