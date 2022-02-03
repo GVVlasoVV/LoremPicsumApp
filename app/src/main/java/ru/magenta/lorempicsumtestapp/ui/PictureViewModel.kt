@@ -12,6 +12,23 @@ class PictureViewModel(
     private val communication: PictureCommunication
 ) : ViewModel() {
     fun fetchPictures() {
+        if (communication.isEmpty()) {
+            communication.map(listOf(PictureUi.Progress))
+            viewModelScope.launch(Dispatchers.IO) {
+                val result = picturesInteractor.fetchPictures()
+                val resultUi = result.map(mapper)
+                withContext(Dispatchers.Main) {
+                    resultUi.map(communication)
+                }
+            }
+        }
+    }
+
+    fun observe(owner: LifecycleOwner, observer: Observer<List<PictureUi>>) {
+        communication.observe(owner, observer)
+    }
+
+    fun addNewPicture() {
         viewModelScope.launch(Dispatchers.IO) {
             val result = picturesInteractor.fetchPictures()
             val resultUi = result.map(mapper)
@@ -19,9 +36,5 @@ class PictureViewModel(
                 resultUi.map(communication)
             }
         }
-    }
-
-    fun observe(owner: LifecycleOwner, observer: Observer<List<PictureUi>>) {
-        communication.observe(owner, observer)
     }
 }

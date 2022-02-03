@@ -5,7 +5,7 @@ import ru.magenta.lorempicsumtestapp.domain.PictureDataToDomainMapper
 import ru.magenta.lorempicsumtestapp.domain.PictureDomain
 
 data class PictureData(
-    private val id: Int,
+    private val id: String,
     private val download: String
 ) : Abstract.Object<PictureDomain, PictureDataToDomainMapper> {
     override fun map(mapper: PictureDataToDomainMapper): PictureDomain =

@@ -15,4 +15,5 @@ class PictureCommunication : Abstract.Mapper {
         listLiveData.observe(owner, observer)
     }
 
+    fun isEmpty(): Boolean = listLiveData.value == null
 }

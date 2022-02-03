@@ -16,9 +16,6 @@ class Network {
         .addNetworkInterceptor(HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         })
-//        .addNetworkInterceptor(HttpLoggingInterceptor().apply {
-//            level = HttpLoggingInterceptor.Level.HEADERS
-//        })
         .build()
 
     private val retrofit: Retrofit = Retrofit.Builder()

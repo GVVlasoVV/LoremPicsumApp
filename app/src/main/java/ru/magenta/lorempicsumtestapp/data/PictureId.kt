@@ -23,12 +23,13 @@ class PictureId(private val service: PictureRandomService) {
                     response: Response<ResponseBody>
                 ) {
                     val id = response.headers()["Picsum-Id"]!!.toInt()
-                    Log.d("id", id.toString())
+                    Log.e("id", id.toString())
                     res.complete(id)
                 }
 
                 override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                     Log.e("callback error", t.toString())
+                    throw t
                 }
             })
         }

@@ -13,7 +13,11 @@ import ru.magenta.lorempicsumtestapp.R
 import ru.magenta.lorempicsumtestapp.core.PictureLoader
 import java.util.ArrayList
 
-class PictureAdapter(private val retry: Retry, private val pictureLoader: PictureLoader) :
+class PictureAdapter(
+    private val retry: Retry,
+    private val pictureLoader: PictureLoader,
+    private val like: Like
+) :
     RecyclerView.Adapter<PictureAdapter.PictureViewHolder>() {
 
     private var pictures = ArrayList<PictureUi>()
@@ -30,14 +34,19 @@ class PictureAdapter(private val retry: Retry, private val pictureLoader: Pictur
         is PictureUi.Success -> 0
         is PictureUi.Fail -> 1
         is PictureUi.Progress -> 2
-        else -> -1
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = when (viewType) {
-        0 -> PictureViewHolder.Success(R.layout.image_layout.makeView(parent), pictureLoader)
-        1 -> PictureViewHolder.Fail(R.layout.fail_layout.makeView(parent), retry)
-        else -> PictureViewHolder.FullscreenProgress(R.layout.progress_layout.makeView(parent))
-    }
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PictureViewHolder =
+        when (viewType) {
+            0 -> PictureViewHolder.Success(
+                R.layout.image_layout.makeView(parent),
+                pictureLoader,
+                like
+            )
+            1 -> PictureViewHolder.Fail(R.layout.fail_layout.makeView(parent), retry)
+            else -> PictureViewHolder.FullscreenProgress(R.layout.progress_layout.makeView(parent))
+        }
+
 
     override fun onBindViewHolder(holder: PictureViewHolder, position: Int) =
         holder.bind(pictures[position])
@@ -47,9 +56,14 @@ class PictureAdapter(private val retry: Retry, private val pictureLoader: Pictur
     abstract class PictureViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         open fun bind(pictureUi: PictureUi) {}
 
-        class Success(view: View, private val pictureLoader: PictureLoader) :
+        class Success(
+            view: View,
+            private val pictureLoader: PictureLoader,
+            private val like: Like
+        ) :
             PictureViewHolder(view) {
             private val image = itemView.findViewById<ImageView>(R.id.picture)
+            private val favorite = itemView.findViewById<ImageView>(R.id.iv_favorite)
             override fun bind(pictureUi: PictureUi) {
                 pictureUi.map(object : PictureUi.UrlMapper {
                     override fun map(url: String) {
@@ -57,6 +71,9 @@ class PictureAdapter(private val retry: Retry, private val pictureLoader: Pictur
                         Log.d("load", url)
                     }
                 })
+                favorite.setOnClickListener {
+                    like.setFavorite()
+                }
             }
         }
 
@@ -80,6 +97,10 @@ class PictureAdapter(private val retry: Retry, private val pictureLoader: Pictur
 
     interface Retry {
         fun tryAgain()
+    }
+
+    interface Like {
+        fun setFavorite()
     }
 
     class DiffUtilCallback(

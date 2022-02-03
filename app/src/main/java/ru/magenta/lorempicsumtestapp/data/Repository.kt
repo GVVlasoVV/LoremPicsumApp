@@ -11,17 +11,19 @@ class Repository(
     private val pictureCloudMapper: PictureCloudMapper,
     private val service: PictureRandomService
 ) {
+    private val list = arrayListOf<PictureData>()
     suspend fun fetchPictures() = try {
-        val list = arrayListOf<PictureData>()
         val id = PictureId(service).fetchId()
         val cloud = dataSource.fetchPicture(id)
         val picture = pictureCloudMapper.map(cloud)
-        Log.e("picture", "add")
+        Log.e("picture", id.toString())
+
+
         list.add(picture)
         PicturesData.Success(list)
 
     } catch (e: Exception) {
+        Log.e("repository", e.toString())
         PicturesData.Fail(e)
     }
-
 }

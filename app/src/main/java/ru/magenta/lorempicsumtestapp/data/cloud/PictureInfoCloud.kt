@@ -17,7 +17,7 @@ import ru.magenta.lorempicsumtestapp.data.PictureDataMapper
  */
 class PictureInfoCloud(
     @SerializedName("id")
-    val id: Int,
+    val id: String,
 
     @SerializedName("author")
     val author: String,

@@ -1,6 +1,9 @@
 package ru.magenta.lorempicsumtestapp.data.cloud
 
+import okhttp3.ResponseBody
+import retrofit2.Response
 import retrofit2.http.GET
+import retrofit2.http.Headers
 import retrofit2.http.Path
 
 /**
@@ -14,8 +17,9 @@ import retrofit2.http.Path
  */
 
 interface PictureInfoService {
+    @Headers("content-type: application/json")
     @GET("id/{id}/info/")
     suspend fun fetchInfoPicture(
         @Path("id") id: Int
-    ): PictureInfoCloud
+    ): ResponseBody
 }

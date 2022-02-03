@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -22,8 +23,6 @@ import ru.magenta.lorempicsumtestapp.ui.*
 
 class MainFragment : Fragment() {
     private var recyclerView: RecyclerView? = null
-
-
     private var pictureViewModel: PictureViewModel? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,24 +65,39 @@ class MainFragment : Fragment() {
                 override fun tryAgain() = pictureViewModel!!.fetchPictures()
             },
             // TODO: 30.01.2022 make width & height dependent on screen size
-            PictureLoader(context!!, 400, 400)
+            PictureLoader(context!!, 600, 400),
+            object : PictureAdapter.Like {
+                override fun setFavorite() {
+                    Toast.makeText(context, "like", Toast.LENGTH_SHORT).show()
+                }
+            }
         )
         recyclerView?.adapter = adapter
-
+        adapter.stateRestorationPolicy =
+            RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY
 
         pictureViewModel?.observe(this, {
             adapter.update(it)
         })
+
         pictureViewModel?.fetchPictures()
 
-//        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-//            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-//                super.onScrollStateChanged(recyclerView, newState)
-//                if (newState == 1) {
-//                    pictureViewModel?.updatePictures()
-//                }
-//            }
-//        })
+        recyclerView?.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                super.onScrollStateChanged(recyclerView, newState)
+                if (!recyclerView.canScrollVertically(1)) {
+                    pictureViewModel?.addNewPicture()
+                }
+            }
+        })
+
+    }
+
+    override fun onViewStateRestored(savedInstanceState: Bundle?) {
+        super.onViewStateRestored(savedInstanceState)
+    }
+
+    private fun getHeight() {
 
     }
 }

@@ -8,7 +8,7 @@ sealed class PictureUi :
 
     override fun map(mapper: UrlMapper) = Unit
     data class Success(
-        val id: Int,
+        val id: String,
         val download: String
     ) : PictureUi() {
         override fun sameContent(pictureUi: PictureUi) =

@@ -15,7 +15,7 @@ class PictureLoader(
     private fun requestImage(url: String, imageView: ImageView) = ImageRequest.Builder(context)
         .data(url)
         .target(imageView)
-        .size(width, height)
+//        .size(width, height)
         .build()
 
     fun fetchImage(url: String, imageView: ImageView): Disposable {
@@ -26,4 +26,6 @@ class PictureLoader(
         Log.e("loader", url)
         return loader
     }
+
+
 }
