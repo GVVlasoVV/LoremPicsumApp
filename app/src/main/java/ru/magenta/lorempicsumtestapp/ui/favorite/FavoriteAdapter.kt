@@ -1,4 +1,4 @@
-package ru.magenta.lorempicsumtestapp.ui
+package ru.magenta.lorempicsumtestapp.ui.favorite
 
 import android.graphics.Bitmap
 import android.view.LayoutInflater
@@ -9,76 +9,80 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import ru.magenta.lorempicsumtestapp.R
 import ru.magenta.lorempicsumtestapp.core.PictureLoader
-import java.util.ArrayList
+import ru.magenta.lorempicsumtestapp.ui.FavoriteListener
+import ru.magenta.lorempicsumtestapp.ui.FavoriteMapper
+import ru.magenta.lorempicsumtestapp.ui.Retry
 
-class PictureAdapter(
+class FavoriteAdapter(
     private val retry: Retry,
     private val pictureLoader: PictureLoader,
     private val favoriteListener: FavoriteListener
-) : RecyclerView.Adapter<PictureAdapter.PictureViewHolder>() {
+) : RecyclerView.Adapter<FavoriteAdapter.FavoriteViewHolder>() {
 
-    private var pictures = ArrayList<PictureUi>()
+    private var favorites = ArrayList<FavoriteUi>()
 
-    fun update(new: List<PictureUi>) {
-        val diffUtil = DiffUtilCallback(pictures, new)
+    fun update(new: List<FavoriteUi>) {
+        val diffUtil = DiffUtilCallback(favorites, new)
         val result = DiffUtil.calculateDiff(diffUtil)
-        pictures.clear()
-        pictures.addAll(new)
+        favorites.clear()
+        favorites.addAll(new)
         result.dispatchUpdatesTo(this)
     }
 
-    override fun getItemViewType(position: Int) = when (pictures[position]) {
-        is PictureUi.Success -> 0
-        is PictureUi.Fail -> 1
-        is PictureUi.Progress -> 2
+    override fun getItemViewType(position: Int) = when (favorites[position]) {
+        is FavoriteUi.Success -> 0
+        is FavoriteUi.Fail -> 1
+        is FavoriteUi.Progress -> 2
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PictureViewHolder =
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FavoriteViewHolder =
         when (viewType) {
-            0 -> PictureViewHolder.Success(
+            0 -> FavoriteViewHolder.Success(
                 R.layout.image_layout.makeView(parent),
                 pictureLoader,
                 favoriteListener
             )
-            1 -> PictureViewHolder.Fail(R.layout.fail_layout.makeView(parent), retry)
-            else -> PictureViewHolder.FullscreenProgress(R.layout.progress_layout.makeView(parent))
+            1 -> FavoriteViewHolder.Fail(R.layout.fail_layout.makeView(parent), retry)
+            else -> FavoriteViewHolder.FullscreenProgress(R.layout.progress_layout.makeView(parent))
         }
 
+    override fun onBindViewHolder(holder: FavoriteViewHolder, position: Int) =
+        holder.bind(favorites[position])
 
-    override fun onBindViewHolder(holder: PictureViewHolder, position: Int) =
-        holder.bind(pictures[position])
+    override fun getItemCount() = favorites.size
 
-    override fun getItemCount() = pictures.size
-
-    abstract class PictureViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        open fun bind(pictureUi: PictureUi) {}
+    abstract class FavoriteViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        open fun bind(favoriteUi: FavoriteUi) {}
 
         class Success(
             view: View,
             private val pictureLoader: PictureLoader,
             private val favoriteListener: FavoriteListener
-        ) : PictureViewHolder(view) {
+        ) : FavoriteViewHolder(view) {
             private var bitmap: Bitmap? = null
             private val image = itemView.findViewById<ImageView>(R.id.picture)
             private val favorite = itemView.findViewById<ImageView>(R.id.iv_favorite)
 
-            override fun bind(pictureUi: PictureUi) {
-                pictureUi.map(object : PictureUi.UrlMapper {
-                    override fun map(url: String) {
-                        CoroutineScope(Dispatchers.IO).launch {
-                            bitmap = pictureLoader.fetchBitmap(url)
+
+            override fun bind(favoriteUi: FavoriteUi) {
+                favoriteUi.map(object : FavoriteUi.TextMapper {
+                    override fun map(message: String) {
+                        CoroutineScope(Dispatchers.Main).launch {
+                            bitmap = pictureLoader.fetchFavorite(message)
+                            image.setImageBitmap(bitmap)
                         }
-                        pictureLoader.fetchPicture(url, image)
                     }
                 })
                 favorite.setOnClickListener {
-                    pictureUi.likeOrUnlike(favoriteListener)
-                    pictureUi.clickLike(object : FavoriteMapper {
+                    favoriteUi.likeOrUnlike(favoriteListener)
+                    favoriteUi.clickLike(object : FavoriteMapper {
                         override fun like(id: String, like: Boolean) {
-                            pictureUi.onLike(!like)
+                            favoriteUi.onLike(!like)
                             val iconId = if (like) {
                                 pictureLoader.removeFavorite(id)
                                 R.drawable.outline_favorite_border_24
@@ -93,13 +97,13 @@ class PictureAdapter(
             }
         }
 
-        class Fail(view: View, private val retry: Retry) : PictureViewHolder(view) {
-            private val message = itemView.findViewById<TextView>(R.id.messageTextView)
+        class Fail(view: View, private val retry: Retry) : FavoriteViewHolder(view) {
+            private val mes = itemView.findViewById<TextView>(R.id.messageTextView)
             private val button = itemView.findViewById<Button>(R.id.tryAgainButton)
-            override fun bind(pictureUi: PictureUi) {
-                pictureUi.map(object : PictureUi.UrlMapper {
-                    override fun map(url: String) {
-                        message.text = url
+            override fun bind(favoriteUi: FavoriteUi) {
+                favoriteUi.map(object : FavoriteUi.TextMapper {
+                    override fun map(message: String) {
+                        mes.text = message
                     }
                 })
                 button.setOnClickListener {
@@ -108,12 +112,12 @@ class PictureAdapter(
             }
         }
 
-        class FullscreenProgress(view: View) : PictureViewHolder(view)
+        class FullscreenProgress(view: View) : FavoriteViewHolder(view)
     }
 
     class DiffUtilCallback(
-        private val oldList: List<PictureUi>,
-        private val newList: List<PictureUi>,
+        private val oldList: List<FavoriteUi>,
+        private val newList: List<FavoriteUi>,
     ) : DiffUtil.Callback() {
         override fun getOldListSize() = oldList.size
 

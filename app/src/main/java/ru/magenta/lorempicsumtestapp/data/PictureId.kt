@@ -9,7 +9,6 @@ import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import ru.magenta.lorempicsumtestapp.core.Network
 import ru.magenta.lorempicsumtestapp.data.cloud.PictureRandomService
 
 class PictureId(private val service: PictureRandomService) {

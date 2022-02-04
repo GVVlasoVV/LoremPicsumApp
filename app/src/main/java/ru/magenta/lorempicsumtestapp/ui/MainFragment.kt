@@ -1,15 +1,15 @@
-package ru.magenta.lorempicsumtestapp
+package ru.magenta.lorempicsumtestapp.ui
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.Gson
+import ru.magenta.lorempicsumtestapp.R
 import ru.magenta.lorempicsumtestapp.core.Network
 import ru.magenta.lorempicsumtestapp.core.PictureLoader
 import ru.magenta.lorempicsumtestapp.data.Repository
@@ -18,7 +18,6 @@ import ru.magenta.lorempicsumtestapp.data.cloud.PictureCloudMapper
 import ru.magenta.lorempicsumtestapp.domain.PictureDataToDomainMapper
 import ru.magenta.lorempicsumtestapp.domain.PicturesDataToDomainMapper
 import ru.magenta.lorempicsumtestapp.domain.PicturesInteractor
-import ru.magenta.lorempicsumtestapp.ui.*
 
 
 class MainFragment : Fragment() {
@@ -27,24 +26,38 @@ class MainFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         val network = Network()
+
         val infoService = network.pictureInfoService()
+
         val randomService = network.pictureRandomService()
+
         val cloudDataSource = PictureCloudDataSource(infoService, Gson())
+
         val repository = Repository(
             cloudDataSource,
             PictureCloudMapper(),
-            randomService
+            randomService,
+            PictureCache(context!!)
         )
+
         val pictureInteractor = PicturesInteractor(
             repository,
             PicturesDataToDomainMapper(PictureDataToDomainMapper())
         )
+
         val mapper =
             PicturesDomainToUiMapper(ResourceProvider.Base(context!!), PictureDomainToUiMapper())
-        val viewModelFactory = ViewModelFactory(pictureInteractor, mapper, PictureCommunication())
+
+        val viewModelFactory = PicturesViewModelFactory(
+            pictureInteractor,
+            mapper,
+            PictureCommunication(),
+            PictureCache(context!!)
+        )
         pictureViewModel = ViewModelProvider(this, viewModelFactory)[PictureViewModel::class.java]
-        pictureViewModel
+        pictureViewModel?.startCache()
     }
 
     override fun onCreateView(
@@ -61,14 +74,13 @@ class MainFragment : Fragment() {
 
         recyclerView?.layoutManager = LinearLayoutManager(context)
         val adapter = PictureAdapter(
-            object : PictureAdapter.Retry {
+            object : Retry {
                 override fun tryAgain() = pictureViewModel!!.fetchPictures()
             },
-            // TODO: 30.01.2022 make width & height dependent on screen size
-            PictureLoader(context!!, 600, 400),
-            object : PictureAdapter.Like {
-                override fun setFavorite() {
-                    Toast.makeText(context, "like", Toast.LENGTH_SHORT).show()
+            PictureLoader(context!!),
+            object : FavoriteListener {
+                override fun likeOrUnlike(id: Int) {
+                    pictureViewModel?.likeOrUnlike(id)
                 }
             }
         )
@@ -90,14 +102,10 @@ class MainFragment : Fragment() {
                 }
             }
         })
-
     }
 
-    override fun onViewStateRestored(savedInstanceState: Bundle?) {
-        super.onViewStateRestored(savedInstanceState)
-    }
-
-    private fun getHeight() {
-
+    override fun onPause() {
+        pictureViewModel?.saveState()
+        super.onPause()
     }
 }

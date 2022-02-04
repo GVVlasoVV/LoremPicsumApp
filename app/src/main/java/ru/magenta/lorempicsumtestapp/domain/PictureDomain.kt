@@ -6,7 +6,8 @@ import ru.magenta.lorempicsumtestapp.ui.PictureUi
 
 data class PictureDomain(
     private val id: String,
-    private val download: String
+    private val download: String,
+    private val like: Boolean
 ) : Abstract.Object<PictureUi, PictureDomainToUiMapper> {
-    override fun map(mapper: PictureDomainToUiMapper) = mapper.map(id, download)
+    override fun map(mapper: PictureDomainToUiMapper) = mapper.map(id, download, like)
 }

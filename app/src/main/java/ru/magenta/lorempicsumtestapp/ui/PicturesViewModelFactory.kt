@@ -4,10 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import ru.magenta.lorempicsumtestapp.domain.PicturesInteractor
 
-class ViewModelFactory(
+class PicturesViewModelFactory(
     private val picturesInteractor: PicturesInteractor,
     private val domainToUiMapper: PicturesDomainToUiMapper,
-    private val communication: PictureCommunication
+    private val communication: PictureCommunication,
+    private val pictureCache: PictureCache
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(PictureViewModel::class.java)) {
@@ -15,9 +16,11 @@ class ViewModelFactory(
             return PictureViewModel(
                 picturesInteractor,
                 domainToUiMapper,
-                communication
+                communication,
+                pictureCache
             ) as T
         }
+
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

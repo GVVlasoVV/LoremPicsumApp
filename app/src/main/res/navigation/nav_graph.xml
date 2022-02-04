@@ -7,13 +7,13 @@
 
     <fragment
         android:id="@+id/mainFragment"
-        android:name="ru.magenta.lorempicsumtestapp.MainFragment"
+        android:name="ru.magenta.lorempicsumtestapp.ui.MainFragment"
         android:label="@string/fragment_main"
         tools:layout="@layout/fragment_main"/>
 
     <fragment
         android:id="@+id/favoriteFragment"
-        android:name="ru.magenta.lorempicsumtestapp.MainFragment"
+        android:name="ru.magenta.lorempicsumtestapp.ui.favorite.FavoriteFragment"
         android:label="@string/fragment_favorite"
         tools:layout="@layout/fragment_main" />
 </navigation>
